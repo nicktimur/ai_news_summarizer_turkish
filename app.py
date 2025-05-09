@@ -1,31 +1,42 @@
-# app.py
-# Gradio arayüzü ile Türkçe özetleme
-
-import gradio as gr
-from transformers import MT5ForConditionalGeneration, MT5Tokenizer
+from transformers import MT5Tokenizer, MT5ForConditionalGeneration
 import torch
 
-# Model ve tokenizer'ı yükle
-model_path = "./models/turkish_mt5_summarizer"
-model = MT5ForConditionalGeneration.from_pretrained(model_path)
-tokenizer = MT5Tokenizer.from_pretrained(model_path)
+# Model ve tokenizer yükleniyor
+model = MT5ForConditionalGeneration.from_pretrained("./mt5_summary_model")
+tokenizer = MT5Tokenizer.from_pretrained("./mt5_summary_model", legacy=False)
 
-# Cihaz ayarı
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = model.to(device)
-model.eval()
-
-# Özetleme fonksiyonu
 def summarize(text):
-    input_text = "generate summary: " + text
-    inputs = tokenizer(input_text, return_tensors="pt", max_length=512, truncation=True).to(device)
-    summary_ids = model.generate(inputs["input_ids"], max_length=80, num_beams=4, early_stopping=True)
-    return tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    input_text = "Özetlenecek haber: " + text.strip()
+    inputs = tokenizer(
+        input_text,
+        return_tensors="pt",
+        truncation=True,
+        padding="max_length",
+        max_length=1024
+    )
+    model.eval()
+    with torch.no_grad():
+        output_ids = model.generate(
+            inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            max_length=156,
+            num_beams=4,
+            repetition_penalty=1.5,
+            no_repeat_ngram_size=3,
+            early_stopping=True
+        )
+    summary = tokenizer.decode(output_ids[0], skip_special_tokens=False)
+    #summary = summary.replace("<extra_id_0>", "").strip()
+    return summary
 
-# Gradio arayüzü oluştur
-interface = gr.Interface(fn=summarize, 
-                         inputs=gr.Textbox(lines=10, placeholder="Uzun Türkçe metni buraya girin..."), 
-                         outputs=gr.Textbox(label="Özet"),
-                         title="Türkçe Otomatik Özetleme")
 
-interface.launch()
+# Test
+test_text = """
+Ankara’da yaşayan 22 yaşındaki yazılım geliştiricisi Timur Karakaş, çocukluk hayali olan özel üretim Xbox 360 konsolunu bulmak için Türkiye’yi baştan sona dolaştı. 2005 yılında piyasaya sürülen ve günümüzde koleksiyon değeri taşıyan bu model, özellikle “Halo 3 Limited Edition” versiyonuyla büyük ilgi görüyor.
+
+Timur, “Pandemiden sonra kendime küçük bir ödül vermek istedim. Eskiden oynadığım oyunları tekrar deneyimlemek istiyordum ama orijinal cihazı bulmak sanıldığından çok daha zordu.” diyerek başladığı yolculuğu İstanbul'dan Gaziantep’e kadar uzandı. Sahafları, ikinci el dükkanlarını ve forumları tek tek dolaşan Timur, sonunda Konya’da bir koleksiyoncu ile iletişime geçti.
+
+Uzun pazarlıklar sonucunda nadir bulunan bu Xbox 360 modeli için 11.250 TL ödedi. Cihazın yanında gelen orijinal kutu, kablolar ve bir adet sınırlı sayıda üretilmiş oyun kolu da Timur’un yüzünü güldürdü. “Bunu sadece oyun oynamak için değil, anılarımı yaşatmak için aldım. Herkesin bir zaman kapsülü vardır, benimki bu cihaz.” dedi.
+
+Sosyal medyada paylaştığı deneyimi kısa sürede binlerce kişiye ulaştı. Timur şimdi de benzer tutkulara sahip koleksiyoncular için küçük bir YouTube kanalı açmayı planlıyor."""
+print(summarize(test_text))
