@@ -4,7 +4,7 @@ import re
 from transformers import MT5ForConditionalGeneration, AutoTokenizer
 
 # Model yolu ve cihaz ayarı
-model_path = "./mt5_summary_model/checkpoint-5"
+model_path = "./mt5_summary_model"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Model ve tokenizer yükle (AutoTokenizer ile uyumluluk sağlanır)

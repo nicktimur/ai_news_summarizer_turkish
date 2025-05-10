@@ -3,6 +3,29 @@ import re
 from datasets import Dataset
 from transformers import MT5Tokenizer, MT5ForConditionalGeneration, Trainer, TrainingArguments, DataCollatorForSeq2Seq, EarlyStoppingCallback
 import torch
+import evaluate
+
+rouge = evaluate.load("rouge")
+
+def compute_metrics(eval_pred):
+    predictions, labels = eval_pred
+
+    decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+    # -100 olanları temizle (padding yerine)
+    decoded_labels = [
+        label.replace(tokenizer.pad_token, "") for label in decoded_labels
+    ]
+
+    result = rouge.compute(predictions=decoded_preds, references=decoded_labels, use_stemmer=True)
+    
+    # Yalnızca rougeL ve rouge2 döndürmek istersen filtrele:
+    return {
+        "rouge1": result["rouge1"],
+        "rouge2": result["rouge2"],
+        "rougeL": result["rougeL"]
+    }
 
 
 # 1. Veriyi Yükle
@@ -85,17 +108,18 @@ training_args = TrainingArguments(
     learning_rate=2e-5,
     label_smoothing_factor=0.1,
     save_total_limit=2,
-    logging_steps=3,
+    logging_steps=10,
     save_strategy="steps",
     save_steps=40,
     fp16=False,
+    tf32=True,
     eval_strategy="steps",
     eval_steps=40,
     load_best_model_at_end=True,
     metric_for_best_model="eval_loss",
     greater_is_better=False,
     remove_unused_columns=False,
-    save_safetensors=False  # <-- bu satırı ekle!
+    save_safetensors=False
 )
 
 data_collator = DataCollatorForSeq2Seq(
@@ -113,6 +137,7 @@ trainer = Trainer(
     eval_dataset=tokenized_test_dataset,
     tokenizer=tokenizer,
     data_collator=data_collator,
+    #compute_metrics=compute_metrics, #Vram yetmedi
     callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
 )
 
@@ -122,7 +147,7 @@ if __name__ == "__main__":
     model.to(device)
 
     # Eğitimi başlatmak istersen:
-    #trainer.train()
-    trainer.train(resume_from_checkpoint="./mt5_summary_model/checkpoint-5")
+    trainer.train()
+    #trainer.train(resume_from_checkpoint="./mt5_summary_model/checkpoint-5")
     trainer.save_model("./mt5_summary_model")
     tokenizer.save_pretrained("./mt5_summary_model")
