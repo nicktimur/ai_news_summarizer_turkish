@@ -147,5 +147,5 @@ if __name__ == "__main__":
     # Eğitimi başlatmak istersen:
     trainer.train()
     #trainer.train(resume_from_checkpoint="./mt5_summary_model/checkpoint-5")
-    trainer.save_model("./mt5-news-summarizer-turkish")
-    tokenizer.save_pretrained("./mt5-news-summarizer-turkish")
+    trainer.save_model("./mt5_summary_model")
+    tokenizer.save_pretrained("./mt5_summary_model")

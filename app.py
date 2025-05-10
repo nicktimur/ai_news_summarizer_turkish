@@ -1,105 +1,70 @@
-import streamlit as st
+import gradio as gr
 import torch
 import re
-from transformers import MT5ForConditionalGeneration, AutoTokenizer
+from transformers import MT5ForConditionalGeneration, MT5Tokenizer
 
-# Model yolu ve cihaz ayarı
-model_path = "./mt5_summary_model"
+# Model yükleme (yalnızca bir kez)
+model_path = "./mt5_summary_model"  # doğru klasör
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Model ve tokenizer yükle (AutoTokenizer ile uyumluluk sağlanır)
 model = MT5ForConditionalGeneration.from_pretrained(model_path).to(device)
 model.eval()
-tokenizer = AutoTokenizer.from_pretrained(model_path, legacy=False)
+tokenizer = MT5Tokenizer.from_pretrained(model_path, legacy=False)
 
-# Temizleme fonksiyonları
+# bad words
+bad_words_ids = [tokenizer.encode(f"<extra_id_{i}>", add_special_tokens=False) for i in range(100) if tokenizer.encode(f"<extra_id_{i}>", add_special_tokens=False)]
+
 def clean_input(text):
-    text = re.sub(r'\s+', ' ', text.replace('\n', ' ').replace('\t', ' ').replace('\\', ' '))
-    return text.strip()
+    return re.sub(r'\s+', ' ', text.replace('\n', ' ').replace('\t', ' ').replace('\\', ' ')).strip()
 
 def clean_output(text):
-    text = re.sub(r'<extra_id_\d+>, ', '', text).strip()
-    text = re.sub(r'<extra_id_\d+>', '', text).strip()
-    return text
+    return re.sub(r'<extra_id_\d+>', '', text).strip()
 
-# Özetleme fonksiyonu
-def summarize(text):
+def summarize(text, method="beam"):
     input_text = "Özetle: " + clean_input(text)
-    inputs = tokenizer(
-        input_text,
-        return_tensors="pt",
-        truncation=True,
-        padding="max_length",
-        max_length=1024
-    ).to(device)
+    inputs = tokenizer(input_text, return_tensors="pt", truncation=True, padding="max_length", max_length=1024).to(device)
 
     with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_length=256,
-            min_length=50,
-            num_beams=6,                
-            repetition_penalty=2.0,     
-            no_repeat_ngram_size=4,     
-            length_penalty=1.0,
-            early_stopping=True,
-            do_sample=False        
-        )
+        if method == "beam":
+            outputs = model.generate(
+                **inputs,
+                max_length=156,
+                num_beams=6,
+                repetition_penalty=2.0,
+                no_repeat_ngram_size=4,
+                length_penalty=1.0,
+                early_stopping=True,
+                bad_words_ids=bad_words_ids,
+                do_sample=False
+            )
+        else:
+            outputs = model.generate(
+                **inputs,
+                max_length=256,
+                do_sample=True,
+                top_k=30,
+                top_p=0.92,
+                repetition_penalty=2.0,
+                no_repeat_ngram_size=4,
+                length_penalty=1.0,
+                early_stopping=True,
+                bad_words_ids=bad_words_ids,
+                num_return_sequences=1
+            )
 
     summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    print(f"Özet: {summary}")
     return clean_output(summary)
 
-def summarize_sampling(text):
-    input_text = "Özetle: " + clean_input(text)
-    inputs = tokenizer(
-        input_text,
-        return_tensors="pt",
-        truncation=True,
-        padding="max_length",
-        max_length=1024
-    ).to(device)
+# Gradio UI
+iface = gr.Interface(
+    fn=lambda text, method: summarize(text, method),
+    inputs=[
+        gr.Textbox(lines=10, placeholder="Buraya haberi yapıştırın", label="Haber Metni"),
+        gr.Radio(choices=["beam", "sampling"], value="beam", label="Özetleme Yöntemi")
+    ],
+    outputs=gr.Textbox(label="Özet"),
+    title="📄 Türkçe Haber Özetleyici",
+    description="Eğitilmiş mT5 modeli ile Türkçe haber metinlerini özetleyin."
+)
 
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_length=256,
-            do_sample=True,              # sampling aktif
-            top_k=30,
-            top_p=0.92,
-            repetition_penalty=2.0,       # 🔼 Daha yüksek ceza, daha az kopya
-            no_repeat_ngram_size=4,       # 🔼 4 kelimelik tekrarları engelle
-            length_penalty=1.0,           # 🔁 Cümle uzunluğunu cezalandırmaz
-            early_stopping=True,
-            num_return_sequences=1,       # Tek üretim (çoklu üretimle kalite seçimi yapılabilir)
-        )
-
-    summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    print(f"Özet: {summary}")
-    return clean_output(summary)
-
-# Streamlit arayüzü
-st.title("📄 Türkçe Haber Özetleyici")
-st.write("Eğittiğiniz özel mT5 modeliyle haberleri otomatik olarak özetleyin.")
-
-user_input = st.text_area("📰 Haberi buraya yapıştırın:", height=300)
-
-if st.button("📌 Özetle"):
-    if user_input.strip():
-        with st.spinner("Model çalışıyor..."):
-            print(user_input)
-            summary = summarize(user_input)
-        st.success("✅ Özet:")
-        st.write(summary)
-    else:
-        st.warning("Lütfen bir metin girin.")
-
-if st.button("📌 Doğal Özetle"):
-    if user_input.strip():
-        with st.spinner("Model çalışıyor..."):
-            print(user_input)
-            summary = summarize_sampling(user_input)
-        st.success("✅ Özet:")
-        st.write(summary)
-    else:
-        st.warning("Lütfen bir metin girin.")
+iface.launch()
