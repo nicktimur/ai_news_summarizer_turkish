@@ -104,15 +104,13 @@ training_args = TrainingArguments(
     output_dir="./mt5_summary_model",
     per_device_train_batch_size=4,
     gradient_accumulation_steps=2,
-    num_train_epochs=3,
+    num_train_epochs=5,
     learning_rate=2e-5,
-    label_smoothing_factor=0.1,
     save_total_limit=2,
     logging_steps=10,
     save_strategy="steps",
     save_steps=40,
     fp16=False,
-    tf32=True,
     eval_strategy="steps",
     eval_steps=40,
     load_best_model_at_end=True,
@@ -149,5 +147,5 @@ if __name__ == "__main__":
     # Eğitimi başlatmak istersen:
     trainer.train()
     #trainer.train(resume_from_checkpoint="./mt5_summary_model/checkpoint-5")
-    trainer.save_model("./mt5_summary_model")
-    tokenizer.save_pretrained("./mt5_summary_model")
+    trainer.save_model("./mt5-news-summarizer-turkish")
+    tokenizer.save_pretrained("./mt5-news-summarizer-turkish")
