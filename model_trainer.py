@@ -32,7 +32,7 @@ def clean_text(text):
 
 # 4. Ön işleme
 def preprocess(example):
-    input_text = "Bu haberi özetle: " + clean_text(example["text"])
+    input_text = "Özetle: " + clean_text(example["text"])
     target_text = clean_text(example["summary"])
 
     input_encoding = tokenizer(
@@ -62,21 +62,17 @@ def preprocess(example):
 # 5. Dataset yükle ve işle
 dataset = create_dataset("data/labeled_data.jsonl").train_test_split(test_size=0.1)
 train_dataset = dataset["train"]
-eval_dataset = dataset["test"]
+test_dataset = dataset["test"]
 
 tokenized_train_dataset = train_dataset.map(
     preprocess,
-    batched=True,
-    batch_size=32,        # VRAM değil, CPU RAM ve çekirdek sayısı belirler
-    num_proc=4,   
+    batched=False,
     remove_columns=["text", "summary"]
 )
 
-tokenized_eval_dataset = eval_dataset.map(
+tokenized_test_dataset = test_dataset.map(
     preprocess,
-    batched=True,
-    batch_size=32,        # VRAM değil, CPU RAM ve çekirdek sayısı belirler
-    num_proc=4,   
+    batched=False,
     remove_columns=["text", "summary"]
 )
 
@@ -87,32 +83,34 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=2,
     num_train_epochs=3,
     learning_rate=2e-5,
-    save_total_limit=4,
-    logging_steps=5,
-    save_steps=20,
+    label_smoothing_factor=0.1,
+    save_total_limit=2,
+    logging_steps=3,
+    save_strategy="steps",
+    save_steps=40,
     fp16=False,
     eval_strategy="steps",
     eval_steps=40,
     load_best_model_at_end=True,
     metric_for_best_model="eval_loss",
     greater_is_better=False,
-    remove_unused_columns=False
+    remove_unused_columns=False,
+    save_safetensors=False  # <-- bu satırı ekle!
 )
 
 data_collator = DataCollatorForSeq2Seq(
-    tokenizer=tokenizer,
+    tokenizer,
     model=model,
     label_pad_token_id=-100,
     return_tensors="pt"
 )
-
 
 # 7. Trainer
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_train_dataset,
-    eval_dataset=tokenized_eval_dataset,
+    eval_dataset=tokenized_test_dataset,
     tokenizer=tokenizer,
     data_collator=data_collator,
     callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
@@ -124,6 +122,7 @@ if __name__ == "__main__":
     model.to(device)
 
     # Eğitimi başlatmak istersen:
-    trainer.train()
+    #trainer.train()
+    trainer.train(resume_from_checkpoint="./mt5_summary_model/checkpoint-5")
     trainer.save_model("./mt5_summary_model")
     tokenizer.save_pretrained("./mt5_summary_model")

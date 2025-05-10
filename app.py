@@ -1,33 +1,28 @@
 import streamlit as st
-from transformers import MT5Tokenizer, MT5ForConditionalGeneration
 import torch
 import re
+from transformers import MT5ForConditionalGeneration, AutoTokenizer
 
-# Model ve tokenizer yükleniyor
-model = MT5ForConditionalGeneration.from_pretrained("./mt5_summary_model")
-tokenizer = MT5Tokenizer.from_pretrained("./mt5_summary_model", legacy=False)
-
-# Model GPU varsa oraya alınır
+# Model yolu ve cihaz ayarı
+model_path = "./mt5_summary_model/checkpoint-5"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-model.eval()
 
+# Model ve tokenizer yükle (AutoTokenizer ile uyumluluk sağlanır)
+model = MT5ForConditionalGeneration.from_pretrained(model_path).to(device)
+model.eval()
+tokenizer = AutoTokenizer.from_pretrained(model_path, legacy=False)
+
+# Temizleme fonksiyonları
 def clean_input(text):
-    text = text.replace('\n', ' ')
-    text = text.replace('\t', ' ')
-    text = text.replace('\\', ' ')
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'\s+', ' ', text.replace('\n', ' ').replace('\t', ' ').replace('\\', ' '))
     return text.strip()
 
 def clean_output(text):
-    text = text.replace("<extra_id_0>", "")
-    text = text.replace("<extra_id_1>", "")
-    text = text.replace("<extra_id_2>", "")
-    text = text.replace("<extra_id_3>", "")
-    return text.strip()
+    return re.sub(r'<extra_id_\d+>', '', text).strip()
 
+# Özetleme fonksiyonu
 def summarize(text):
-    input_text = "Bu haberi özetle: " + clean_input(text)
+    input_text = "Haber özeti üret: " + clean_input(text)
     inputs = tokenizer(
         input_text,
         return_tensors="pt",
@@ -37,20 +32,19 @@ def summarize(text):
     ).to(device)
 
     with torch.no_grad():
-        output_ids = model.generate(
-            inputs["input_ids"],
-            attention_mask=inputs["attention_mask"],
+        outputs = model.generate(
+            **inputs,
             max_length=156,
             num_beams=4,
             repetition_penalty=1.5,
             no_repeat_ngram_size=3,
-            decoder_start_token_id=tokenizer.pad_token_id,
             early_stopping=True
         )
-    summary = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+
+    summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return clean_output(summary)
 
-# Streamlit Arayüzü
+# Streamlit arayüzü
 st.title("📄 Türkçe Haber Özetleyici")
 st.write("Eğittiğiniz özel mT5 modeliyle haberleri otomatik olarak özetleyin.")
 
