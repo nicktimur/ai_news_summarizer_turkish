@@ -54,18 +54,18 @@ Bu proje, Türkçe haber metinlerini özetlemek için Google'ın mT5 modelini ku
    python app.py
    ```
 
-4. **Manuel Etiketleme Aracını Çalıştırın**  
-   Haber metinlerini manuel olarak özetlemek için Streamlit tabanlı aracı çalıştırabilirsiniz:
-
-   ```bash
-   streamlit run data/labeler_app.py
-   ```
-
 ---
 
 ## 📊 Model Eğitimi
 
 Eğer modeli sıfırdan eğitmek isterseniz:
+
+0. **Manuel Etiketleme Aracını Çalıştırın(Kendi verinizi çekerseniz.)**  
+   Haber metinlerini manuel olarak özetlemek için Streamlit tabanlı aracı çalıştırabilirsiniz:
+
+   ```bash
+   streamlit run data/labeler_app.py
+   ```
 
 1. **Etiketlenmiş Veriyi Hazırlayın**  
    `data/labeled_data.jsonl` dosyasını oluşturun. Bu dosya, haber metinlerini ve özetlerini içermelidir.
