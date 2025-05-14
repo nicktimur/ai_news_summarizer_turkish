@@ -116,7 +116,7 @@ Katkıda bulunmak isterseniz, lütfen bir pull request gönderin veya bir issue 
 ## 📧 İletişim
 
 Herhangi bir sorunuz veya öneriniz varsa, lütfen benimle iletişime geçin.
-timurkarakas.com.tr
+www.timurkarakas.com.tr
 
 ---
 
