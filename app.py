@@ -4,7 +4,10 @@ import re
 from transformers import MT5ForConditionalGeneration, MT5Tokenizer
 
 # Model yükleme (yalnızca bir kez)
-model_path = "./mt5_summary_model"  # doğru klasör
+#model_path = "yeniguno/turkish-abstractive-summary-mt5"
+#model_path = "ozcangundes/mt5-small-turkish-summarization"
+
+model_path = "./mt5_smummary_model"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = MT5ForConditionalGeneration.from_pretrained(model_path).to(device)
@@ -32,7 +35,7 @@ def summarize(text, method="beam"):
                 num_beams=6,
                 repetition_penalty=2.0,
                 no_repeat_ngram_size=4,
-                length_penalty=1.0,
+                length_penalty=0.5,
                 early_stopping=True,
                 bad_words_ids=bad_words_ids,
                 do_sample=False
