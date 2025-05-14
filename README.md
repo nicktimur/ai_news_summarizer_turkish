@@ -89,10 +89,6 @@ Eğer modeli sıfırdan eğitmek isterseniz:
 - Özetleme yöntemini seçin (Beam Search veya Sampling).
 - "Submit" butonuna tıklayarak özetinizi alın.
 
-### Manuel Etiketleme
-- Haber metinlerini okuyarak özetlerini girin.
-- Kaydet butonuna tıklayarak etiketlenmiş veriyi oluşturun.
-
 ---
 
 ## 📦 Gereksinimler
