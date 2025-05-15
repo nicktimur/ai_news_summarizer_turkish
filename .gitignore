@@ -399,3 +399,4 @@ FodyWeavers.xsd
 /models/mt5-summarizer-tr
 /mt5_summary_model
 hugging_face-push.py
+/mt5_summary_model-ilk
