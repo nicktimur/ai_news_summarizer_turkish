@@ -52,6 +52,9 @@ Bu proje, Türkçe haber metinlerini özetlemek için Google'ın mT5 modelini ku
 | ROUGE-L    | 0.1950  |
 | ROUGE-Lsum | 0.1963  |
 
+## 📄 İndirme Linki
+[![Model: nicktimur/mt5-base-turkish-news-summarizer](https://img.shields.io/badge/HuggingFace-Model-yellow?logo=huggingface)](https://huggingface.co/nicktimur/mt5-base-turkish-news-summarizer)
+
 ---
 
 ## 📊 Eğitim Günlüğü (Training Logs) / Internetten aldığım 10k veri ile
@@ -97,6 +100,9 @@ Bu proje, Türkçe haber metinlerini özetlemek için Google'ın mT5 modelini ku
 | ROUGE-2   | 0.2389  |
 | ROUGE-L   | 0.3305  |
 | ROUGE-Lsum| 0.3309  |
+
+## 📄 İndirme Linki
+[![Model: nicktimur/mt5-base-turkish-news-summarizer-10k](https://img.shields.io/badge/HuggingFace-Model-yellow?logo=huggingface)](https://huggingface.co/nicktimur/mt5-base-turkish-news-summarizer-10k)
 
 ---
 
