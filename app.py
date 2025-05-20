@@ -6,8 +6,9 @@ from transformers import MT5ForConditionalGeneration, MT5Tokenizer
 # Model yükleme (yalnızca bir kez)
 #model_path = "yeniguno/turkish-abstractive-summary-mt5"
 #model_path = "ozcangundes/mt5-small-turkish-summarization"
+#model_path = "nicktimur/mt5-base-turkish-news-summarizer"
 
-model_path = "./mt5_smummary_model"
+model_path = "./mt5_parquet_summary_model"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = MT5ForConditionalGeneration.from_pretrained(model_path).to(device)

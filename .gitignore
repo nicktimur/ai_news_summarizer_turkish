@@ -400,3 +400,4 @@ FodyWeavers.xsd
 /mt5_summary_model
 hugging_face-push.py
 /mt5_summary_model-ilk
+/mt5_parquet_summary_model
