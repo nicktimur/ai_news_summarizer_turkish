@@ -22,9 +22,7 @@ Modelin eğitimi sırasında iki farklı veri seti kullanılmıştır:
 
 ### 2. Yenigün Türkçe Haber Özetleme Verisi (10.000 Haber)
 
-İkinci aşamada, [Yenigün Turkish News Summary](https://huggingface.co/datasets/yeniguno/turkish-news-summary-onesentence) veri setinden 60.000 haber arasından **rastgele seçilen 10.000 örnek** kullanılmıştır. Bu veri seti, daha geniş kapsamlı haber çeşitliliği ile modelin genelleme yeteneğini artırmayı hedeflemiştir.
-
-> Kaynak: [https://huggingface.co/datasets/yeniguno/turkish-news-summary-onesentence](https://huggingface.co/datasets/yeniguno/turkish-news-summary-onesentence)
+İkinci aşamada, [Yeniguno Turkish News Summary](https://huggingface.co/datasets/yeniguno/turkish-news-summary-onesentence) veri setinden 60.000 haber arasından **rastgele seçilen 10.000 örnek** kullanılmıştır. Bu veri seti, daha geniş kapsamlı haber çeşitliliği ile modelin genelleme yeteneğini artırmayı hedeflemiştir.
 
 Bu iki aşamalı veri kullanımı sayesinde model hem özgün hem de çeşitli haber içerikleri üzerinde özetleme yeteneği kazanmıştır.
 
