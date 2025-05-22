@@ -12,6 +12,66 @@ Bu proje, Türkçe haber metinlerini özetlemek için Google'ın mT5 modelini ku
 
 ---
 
+## Kullanılan Veriler
+
+Modelin eğitimi sırasında iki farklı veri seti kullanılmıştır:
+
+### 1. Elle Etiketlenmiş Veri Seti (712 Haber)
+
+İlk aşamada, 712 adet Türkçe haber verisi **elle toplanmış** ve her biri **ChatGPT yardımıyla tek tek özetlenerek** etiketlenmiştir. Bu veri seti, modelin Türkçe özetleme yapısını öğrenmesi için temel eğitim verisi olarak kullanılmıştır.
+
+### 2. Yenigün Türkçe Haber Özetleme Verisi (10.000 Haber)
+
+İkinci aşamada, [Yenigün Turkish News Summary](https://huggingface.co/datasets/yeniguno/turkish-news-summary-onesentence) veri setinden 60.000 haber arasından **rastgele seçilen 10.000 örnek** kullanılmıştır. Bu veri seti, daha geniş kapsamlı haber çeşitliliği ile modelin genelleme yeteneğini artırmayı hedeflemiştir.
+
+> Kaynak: [https://huggingface.co/datasets/yeniguno/turkish-news-summary-onesentence](https://huggingface.co/datasets/yeniguno/turkish-news-summary-onesentence)
+
+Bu iki aşamalı veri kullanımı sayesinde model hem özgün hem de çeşitli haber içerikleri üzerinde özetleme yeteneği kazanmıştır.
+
+---
+
+## Eğitim Ortamı ve Ayarları
+
+### Donanım Bilgisi
+
+Model eğitimi aşağıdaki donanım üzerinde gerçekleştirilmiştir:
+
+- **İşlemci (CPU):** Intel Core i5-11400F (6 çekirdek / 12 iş parçacığı)
+- **RAM:** 32 GB DDR4 3200 MHz
+- **Ekran Kartı (GPU):** NVIDIA RTX 3070 (8 GB VRAM)
+
+---
+
+## Eğitim Ayarları (TrainingArguments)
+
+Model, aşağıdaki `transformers.TrainingArguments` parametreleriyle eğitilmiştir:
+
+```python
+from transformers import TrainingArguments
+
+training_args = TrainingArguments(
+    output_dir="./mt5_summary_model",                # Eğitim sonrası modelin kaydedileceği dizin
+    per_device_train_batch_size=4,                   # Her cihaz (GPU/CPU) için batch büyüklüğü
+    gradient_accumulation_steps=2,                   # Toplamda 4x2 = 8 batch büyüklüğüne eşdeğer güncelleme için gradyan biriktirme
+    num_train_epochs=5,                              # Verisetinin 5 kez modellenmesi
+    learning_rate=2e-5,                              # Başlangıç öğrenme oranı
+    save_total_limit=2,                              # Sadece en fazla 2 checkpoint saklanır
+    logging_steps=10,                                # Her 10 adımda bir log kaydı alınır
+    save_strategy="steps",                           # Belirli adımlarda checkpoint kaydetme stratejisi
+    save_steps=40,                                   # Her 40 adımda bir model checkpoint kaydedilir
+    fp16=False,                                      # FP16 (yarı hassasiyet) kullanımı devre dışı
+    eval_strategy="steps",                           # Belirli adımlarda değerlendirme yapılır
+    eval_steps=40,                                   # Her 40 adımda bir değerlendirme yapılır
+    load_best_model_at_end=True,                     # Eğitim sonunda en iyi (en düşük loss'lu) model yüklenir
+    metric_for_best_model="eval_loss",               # En iyi modelin belirlenmesinde kullanılan metrik
+    greater_is_better=False,                         # Daha düşük `eval_loss` daha iyidir
+    remove_unused_columns=False,                     # Kullanılmayan veri sütunları silinmez (özelleştirilmiş dataset'ler için)
+    save_safetensors=False                           # `safetensors` formatı kullanılmaz
+)
+```
+
+---
+
 ## 📊 Eğitim Günlüğü (Training Logs) / Benim oluşturduğum 712 veriyle
 
 | Epoch | Train Loss | Eval Loss | Grad Norm | Learning Rate |
