@@ -1,3 +1,4 @@
+from runtime import ModelRunner, model_source, project_path
 import json
 import random
 import re
@@ -12,11 +13,11 @@ import pandas as pd
 rouge = evaluate.load("rouge")
 
 # Model ve tokenizer yükle
-model_path = "./mt5_summary_model-ilk"
+model_path = model_source("./mt5_summary_model-ilk")
 #model_path = "./mt5_parquet_summary_model"
 tokenizer = MT5Tokenizer.from_pretrained(model_path, legacy=False)
 model = MT5ForConditionalGeneration.from_pretrained(model_path)
-model.eval().to("cuda" if torch.cuda.is_available() else "cpu")
+runner = ModelRunner(model)
 
 # Temizleme fonksiyonu
 def clean_text(text):
@@ -43,10 +44,10 @@ def get_sample_subset(dataset, ratio=0.1):
 # Özet üretme
 def generate_summary(text):
     input_text = "Özetle: " + clean_text(text)
-    input_ids = tokenizer.encode(input_text, return_tensors="pt", truncation=True, max_length=512).to(model.device)
+    input_ids = tokenizer.encode(input_text, return_tensors="pt", truncation=True, max_length=512)
 
-    summary_ids = model.generate(
-        input_ids,
+    summary_ids = runner.generate(
+        {"input_ids": input_ids},
         max_length=128,
         num_beams=4,
         no_repeat_ngram_size=2,
@@ -92,6 +93,6 @@ def plot_rouge_scores(scores):
     plt.show()
 
 if __name__ == "__main__":
-    scores = evaluate_model("data/labeled_data.jsonl")
+    scores = evaluate_model(project_path("data/labeled_data.jsonl"))
     print("ROUGE Scores:", scores)
     plot_rouge_scores(scores)

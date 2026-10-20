@@ -1,5 +1,7 @@
 # 📄 Türkçe Haber Özetleyici
 
+**macOS / Apple Silicon kurulumu:** [MACOS.md](MACOS.md). Windows CUDA/CPU akışı korunmuştur; Mac için `requirements-macos.txt` kullanın.
+
 Bu proje, Türkçe haber metinlerini özetlemek için Google'ın mT5 modelini kullanan bir uygulamadır. Proje, haber metinlerini beam search veya sampling yöntemleriyle özetler ve Gradio tabanlı bir kullanıcı arayüzü sunar. Ayrıca, veri temizleme, manuel etiketleme ve model eğitimi gibi özellikler içerir.
 
 ## 🚀 Özellikler

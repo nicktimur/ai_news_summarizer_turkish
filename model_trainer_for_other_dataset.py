@@ -1,3 +1,4 @@
+from runtime import mac_training_options, project_path
 import re
 import torch
 from datasets import load_dataset, Dataset
@@ -49,7 +50,7 @@ tokenizer = MT5Tokenizer.from_pretrained(model_name)
 model = MT5ForConditionalGeneration.from_pretrained(model_name)
 
 # .parquet dosyasını oku
-dataset = load_dataset("parquet", data_files={"train": "data/news_summary.parquet"})
+dataset = load_dataset("parquet", data_files={"train": project_path("data/news_summary.parquet")})
 
 # 🔹 Sadece ilk 5000 örneği kullan
 dataset = dataset["train"].select(range(10000)).train_test_split(test_size=0.1)
@@ -60,9 +61,9 @@ tokenized_test = dataset["test"].map(preprocess, remove_columns=["text", "summar
 
 
 # Eğitim ayarları
-training_args = TrainingArguments(
-    output_dir="./mt5_parquet_summary_model",
-    logging_dir="./logs",
+training_options = dict(
+    output_dir=project_path("./mt5_parquet_summary_model"),
+    logging_dir=project_path("./logs"),
     per_device_train_batch_size=4,
     gradient_accumulation_steps=2,
     num_train_epochs=3,
@@ -80,6 +81,8 @@ training_args = TrainingArguments(
     remove_unused_columns=False,
     save_safetensors=False
 )
+training_options.update(mac_training_options())
+training_args = TrainingArguments(**training_options)
 
 # Trainer oluştur
 trainer = Trainer(
@@ -94,10 +97,11 @@ trainer = Trainer(
 
 # Eğitim
 if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # Trainer selects MPS on macOS, CUDA on NVIDIA, or CPU as configured.
+    device = training_args.device
     model.to(device)
     print(device)
     
     trainer.train()
-    trainer.save_model("./mt5_parquet_summary_model")
-    tokenizer.save_pretrained("./mt5_parquet_summary_model")
+    trainer.save_model(project_path("./mt5_parquet_summary_model"))
+    tokenizer.save_pretrained(project_path("./mt5_parquet_summary_model"))

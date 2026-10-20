@@ -1,0 +1,24 @@
+# Native arm64 Python 3.11 or 3.12; Windows keeps requirements.txt.
+torch==2.7.0
+transformers==4.51.3
+accelerate==1.6.0
+sentencepiece==0.2.0
+protobuf>=3.20.3,<6
+huggingface-hub>=0.30,<1
+gradio==5.23.3
+pydantic>=2.10,<2.11
+numpy>=1.26,<2
+datasets==2.19.1
+pyarrow>=15,<21
+evaluate==0.4.3
+rouge-score==0.1.2
+absl-py>=2,<3
+nltk>=3.8,<4
+matplotlib>=3.8,<4
+pandas>=2.2,<3
+scipy==1.13.0
+scikit-learn==1.6.1
+streamlit==1.45.0
+tqdm==4.66.4
+requests>=2.31,<3
+beautifulsoup4>=4.12,<5
